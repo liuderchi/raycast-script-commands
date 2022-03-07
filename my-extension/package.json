@@ -8,14 +8,21 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "index",
+      "name": "hello",
       "title": "Hello World",
       "description": "Template with a plain detail view",
+      "mode": "view"
+    },
+    {
+      "name": "toggles",
+      "title": "Toggles",
+      "description": "Template for showing a static list and a detail view",
       "mode": "view"
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.29.1"
+    "@raycast/api": "^1.29.1",
+    "run-applescript": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "~16.10.0",
