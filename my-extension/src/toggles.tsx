@@ -1,6 +1,8 @@
-import { ActionPanel, List, Action, Toast, showToast } from "@raycast/api";
+import { ActionPanel, List, Action, Toast, showToast, environment } from "@raycast/api";
 import { useState, useEffect, useCallback, FC } from "react";
 import { runAppleScript } from "run-applescript";
+
+import DebugListItem from "./Debug";
 
 type GetStatusResult = "1" | "0";
 
@@ -74,6 +76,7 @@ const MenuList: FC = () => {
           )
         }
       />
+      {environment.isDevelopment && <DebugListItem />}
     </List>
   );
 };
