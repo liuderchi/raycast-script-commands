@@ -1,19 +1,33 @@
+import fs from "node:fs";
 import { ActionPanel, List, Action, Toast, showToast, environment } from "@raycast/api";
 import { useState, useEffect, useCallback, FC } from "react";
 import { runAppleScript } from "run-applescript";
 
 import DebugListItem from "./Debug";
 
+const checkFileExists = (file: string): Promise<boolean> => {
+  return fs.promises
+    .access(file, fs.constants.F_OK)
+    .then(() => true)
+    .catch(() => false);
+};
+
+const findUtilPath = async (): Promise<string> => {
+  const possiblePaths = ["/usr/local/bin/blueutil", "/opt/homebrew/bin/blueutil"];
+  const isExist = await checkFileExists(possiblePaths[0]);
+  return isExist ? possiblePaths[0] : possiblePaths[1];
+};
+
 type GetStatusResult = "1" | "0";
 
 // Note require cli blueutil (brew install blueutil)
-const getStatus = `
-  set btStatus to do shell script "/usr/local/bin/blueutil -p"
+const getStatus = (utilPath: string) => `
+  set btStatus to do shell script "${utilPath} -p"
   return btStatus
 `;
 
-const toggleStatus = `
-  do shell script "/usr/local/bin/blueutil -p toggle"
+const toggleStatus = (utilPath: string) => `
+  do shell script "${utilPath} -p toggle"
 `;
 
 // if command mode is "view", exported function should NOT be async
@@ -25,7 +39,8 @@ const MenuList: FC = () => {
     try {
       setLoading(true);
       showToast({ style: Toast.Style.Animated, title: "Toggling" });
-      await runAppleScript(toggleStatus);
+      const utilPath = await findUtilPath();
+      await runAppleScript(toggleStatus(utilPath));
       showToast(Toast.Style.Success, `Bluetooth is ${!current ? "on" : "off"}`);
     } catch (error) {
       showToast(Toast.Style.Failure, String(error));
@@ -38,7 +53,8 @@ const MenuList: FC = () => {
   const getStatusCallback = useCallback(async () => {
     try {
       setLoading(true);
-      const result = (await runAppleScript(getStatus)) as GetStatusResult;
+      const utilPath = await findUtilPath();
+      const result = (await runAppleScript(getStatus(utilPath))) as GetStatusResult;
       if (result === "1") {
         setIsBtOn(true);
       } else if (result === "0") {
