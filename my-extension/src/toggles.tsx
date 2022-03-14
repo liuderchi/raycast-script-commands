@@ -5,42 +5,53 @@ import { runAppleScript } from "run-applescript";
 
 import DebugListItem from "./Debug";
 
-const checkFileExists = (file: string): Promise<boolean> => {
-  return fs.promises
-    .access(file, fs.constants.F_OK)
-    .then(() => true)
-    .catch(() => false);
-};
+let UTIL_PATH: string | undefined;
 
-const findUtilPath = async (): Promise<string> => {
-  const possiblePaths = ["/usr/local/bin/blueutil", "/opt/homebrew/bin/blueutil"];
-  const isExist = await checkFileExists(possiblePaths[0]);
-  return isExist ? possiblePaths[0] : possiblePaths[1];
+const findUtil = async (): Promise<string> => {
+  // possible installation paths in different envs
+  const UTIL_SEARCH_PATHS = ["/usr/local/bin/blueutil", "/opt/homebrew/bin/blueutil"];
+
+  const checkFileExists = (file: string): Promise<boolean> => {
+    return fs.promises
+      .access(file, fs.constants.F_OK)
+      .then(() => true)
+      .catch(() => false);
+  };
+
+  if (!UTIL_PATH) {
+    const checkResults = await Promise.all(
+      UTIL_SEARCH_PATHS.map((path) => checkFileExists(path))
+    );
+    const result = UTIL_SEARCH_PATHS.find((p, idx) => checkResults[idx]) as string;
+    UTIL_PATH = result;
+  }
+
+  return UTIL_PATH;
 };
 
 type GetStatusResult = "1" | "0";
 
 // Note require cli blueutil (brew install blueutil)
-const getStatus = (utilPath: string) => `
-  set btStatus to do shell script "${utilPath} -p"
+const getStatus = () => `
+  set btStatus to do shell script "${UTIL_PATH} -p"
   return btStatus
 `;
 
-const toggleStatus = (utilPath: string) => `
-  do shell script "${utilPath} -p toggle"
+const toggleStatus = () => `
+  do shell script "${UTIL_PATH} -p toggle"
 `;
 
 // if command mode is "view", exported function should NOT be async
 const MenuList: FC = () => {
   const [isBtOn, setIsBtOn] = useState<boolean>();
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   const toggleBluetooth = useCallback(async (current?: boolean) => {
     try {
       setLoading(true);
       showToast({ style: Toast.Style.Animated, title: "Toggling" });
-      const utilPath = await findUtilPath();
-      await runAppleScript(toggleStatus(utilPath));
+      await findUtil();
+      await runAppleScript(toggleStatus());
       showToast(Toast.Style.Success, `Bluetooth is ${!current ? "on" : "off"}`);
     } catch (error) {
       showToast(Toast.Style.Failure, String(error));
@@ -53,8 +64,8 @@ const MenuList: FC = () => {
   const getStatusCallback = useCallback(async () => {
     try {
       setLoading(true);
-      const utilPath = await findUtilPath();
-      const result = (await runAppleScript(getStatus(utilPath))) as GetStatusResult;
+      await findUtil();
+      const result = (await runAppleScript(getStatus())) as GetStatusResult;
       if (result === "1") {
         setIsBtOn(true);
       } else if (result === "0") {
@@ -76,7 +87,9 @@ const MenuList: FC = () => {
     <List isLoading={loading}>
       <List.Item
         icon="bluetooth.png"
-        title={`Bluetooth: ${loading || typeof isBtOn !== "boolean" ? "..." : isBtOn ? `🟢` : `🚫`}`}
+        title={`Bluetooth: ${
+          loading || typeof isBtOn !== "boolean" ? "..." : isBtOn ? `🟢` : `🚫`
+        }`}
         actions={
           !loading && (
             <ActionPanel>
