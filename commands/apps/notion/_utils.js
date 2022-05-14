@@ -3,6 +3,14 @@
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
+async function openFinder(path) {
+  try {
+    await exec(`open "${path}"`);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 async function openNotionPage(pagePath) {
   try {
     const url = new URL(pagePath || '', 'notion://www.notion.so');
@@ -21,6 +29,7 @@ async function openFirefoxPage(page) {
 }
 
 module.exports = {
+  openFinder,
   openNotionPage,
   openFirefoxPage,
 };
