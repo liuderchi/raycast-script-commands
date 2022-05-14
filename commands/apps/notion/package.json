@@ -4,7 +4,8 @@
   "description": "",
   "main": "_utils.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install:env": "cp .env ../../../_enabled-commands"
   },
   "keywords": [],
   "author": "",

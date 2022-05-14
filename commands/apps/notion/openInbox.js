@@ -2,11 +2,11 @@
 
 // Required parameters:
 // @raycast.schemaVersion 1
-// @raycast.title Notion - Chores
+// @raycast.title Notion - Inbox
 // @raycast.mode silent
 
 // Optional parameters:
-// @raycast.icon images/notion-icon.png
+// @raycast.icon images/icon-notion.png
 // @raycast.packageName Raycast Scripts
 // @raycast.description Navigate to notion pages
 
@@ -16,19 +16,16 @@
 // 3. cp this file to `_enabled-commands`
 
 require('dotenv').config();
-const REPO_NAME = 'raycast-script-commands';
 
-const os = require('os');
 const path = require('path');
 const { openNotionPage } = require(path.join(
-  os.homedir(),
-  REPO_NAME,
-  'commands/apps/notion/_utils',
+  process.env.NOTION_PROJ_ROOT,
+  '_utils',
 ));
 
 async function main() {
   try {
-    await openNotionPage(process.env.NOTION_CHORES);
+    await openNotionPage(process.env.NOTION_INBOX);
   } catch (err) {
     console.error(err);
   }
