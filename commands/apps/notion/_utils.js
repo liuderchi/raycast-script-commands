@@ -12,6 +12,15 @@ async function openNotionPage(pagePath) {
   }
 }
 
+async function openFirefoxPage(page) {
+  try {
+    await exec(`open -a Firefox "${page}"`);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 module.exports = {
   openNotionPage,
+  openFirefoxPage,
 };
